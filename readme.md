@@ -2,11 +2,22 @@
 
 Working on high-performance clusters is ugly but it doesn't have to be! FancyPrint is a small package containing helpers to make terminal outputs just a little more fancy 💅.
 
-## Getting Started
+## Chunks
 
-### FancyPrintContexts
+The core concept of FancyPrint is the `FancyPrintContext`. Let's look at an example
 
-A `FancyPrintContext` is the central part of FancyPrint. It manages the grouping of several print statements into groups called chunks. Each such chunk is associated with a certain type of information the group of print statements conveys. The following types are available
+
+```python
+import fancyprint as fp
+
+with fp.FancyPrintContext("My first context", fp.MessageType.INFO) as ctx:
+    ctx.print("Hello world!")
+```
+
+![](docs/assets/demo1.png)
+
+
+As we can see, the two print statements "My first context" and "Hello world!" are visually grouped together into a chunk. In FancyPrint each chunk has an associated `MessageType` that represents what kind of information should be conveyed. There are a total of 5 different types
 
 * `MessageType.INFO`
 * `MessageType.OK`
@@ -34,65 +45,31 @@ with fp.FancyPrintContext("Oops a warning", fp.MessageType.WARNING) as fpc:
     fpc.print("Explain what went wrong here")
 ```
 
-    [94m⎡ INFO [0m Here is some info
-    [94m⎢[0m [94m     [0m Here is some more info
-    [94m⎣[0m
-    [92m⎡ OKAY [0m All ok
-    [92m⎢[0m [92m     [0m Very nice :)
-    [92m⎣[0m
-    [96m⎡ DEBUG[0m Here is some debug info
-    [96m⎢[0m [96m     [0m Here is some more debug info
-    [96m⎣[0m
-    [91m⎡ ERROR[0m Oh no an error
-    [91m⎢[0m [91m     [0m Explain what went wrong here
-    [91m⎣[0m
-    [93m⎡ WARN [0m Oops a warning
-    [93m⎢[0m [93m     [0m Explain what went wrong here
-    [93m⎣[0m
+![](docs/assets/demo2.png)
+    
 
 
-Sometimes we just need to print a single-line status update. In this case we can use the `print_single` method as follows:
+## Single line chunks
+
+Sometimes we just want to print a single-line status message. For this case FancyPrint provides the `print_single` method which produces the following output:
 
 
 ```python
 fpc.print_single("This is a single-line warning", fp.MessageType.WARNING)
 ```
 
-    [93m[ WARN [0m This is a single-line warning
+![](docs/assets/demo3.png)
 
 
 For convenience FancyPrint defines the following aliases 
-* `print_info`
-* `print_ok`
-* `print_error`
-* `print_debug`
-* `print_warning`
 
-which eliminate the need to specify the message type.
-
-
-```python
-fp.print_warning("This is a single-line warning")
-```
-
-    [93m[ WARN [0m This is a single-line warning
-
-
-# The global context
-
-When imported FancyPrint sets up a `FancyPrintContext` for you automatically called `GLOBAL_CONTEXT`. To start a chunk right away you can do the following:
-
-
-```python
-fp.GLOBAL_CONTEXT.new_chunk("This is a chunk", fp.MessageType.INFO)
-fp.GLOBAL_CONTEXT.end_chunk()
-```
-
-    [94m⎡ INFO [0m This is a chunk
-    [94m⎣[0m
-    
-    
-
+| Alias            	|                                                 	|
+|------------------	|-------------------------------------------------	|
+| `info(message)`  	| `print_single(message, fp.MessageType.INFO)`    	|
+| `ok(message)`    	| `print_single(message, fp.MessageType.OK)`      	|
+| `error(message)` 	| `print_single(message, fp.MessageType.ERROR)`   	|
+| `warn(message)`  	| `print_single(message, fp.MessageType.WARNING)` 	|
+| `debug(message)` 	| `print_single(message, fp.MessageType.DEBUG)`   	|
 
 ## Different Message Types within the same chunk
 
@@ -107,19 +84,15 @@ with fp.FancyPrintContext("Here is some info", fp.MessageType.INFO) as fpc:
     fpc.print("A warning came up", fp.MessageType.WARNING)
 ```
 
-    [94m⎡ INFO [0m Here is some info
-    [94m⎢[0m [94m     [0m Here is some more info
-    [94m⎢[0m [96mDEBUG[0m Here is some additional info when debugging
-    [94m⎢[0m [94m     [0m Even more info
-    [94m⎢[0m [93mWARN [0m A warning came up
-    [94m⎣[0m
-    
-    
-
+![](docs/assets/demo4.png)
 
 # Quality of life functions
 
-FancyPrint contains a couple of functions to make life just a little easier.
+FancyPrint contains a couple of quality of life functions that make printing common data structures a little fancier.
+
+## Dictionaries
+
+Dictionaries can be formatted using the `print_enum()` function
 
 
 ```python
@@ -127,20 +100,17 @@ params = {"a" : 2, "b": 12.3213, "c" : "hello", "d" : True}
 fp.print_enum(params, fp.MessageType.INFO, "Parameters")
 ```
 
-    [94m⎡ INFO [0m Parameters
-    [94m⎢[0m [94m     [0m • a = 2
-    [94m⎢[0m [94m     [0m • b = 12.3213
-    [94m⎢[0m [94m     [0m • c = hello
-    [94m⎢[0m [94m     [0m • d = True
-    [94m⎣[0m
-    
-    
+![](docs/assets/demo5.png)
 
+## Tables
+
+The submodule `fancytables` contains method to format lists, arrays and data frames as tables.
 
 
 ```python
 import numpy as np
-from fancytables import FancyTable
+from fancyprint.fancytables import FancyTable
+
 epochs = np.arange(10)
 loss = np.random.rand(10).cumsum()[::-1]
 FancyTable(["epoch", "loss"], [5, 10]).print(epochs, loss)
@@ -148,17 +118,21 @@ FancyTable(["epoch", "loss"], [5, 10]).print(epochs, loss)
 
     epoch |    loss   
     ==================
-    0     | 5.84484686
-    1     | 5.23525243
-    2     | 4.89788282
-    3     | 4.86022193
-    4     | 4.15116868
-    5     | 3.22414394
-    6     | 2.31917861
-    7     | 1.75547750
-    8     | 0.89670580
-    9     | 0.30191273
+    0     | 6.25687424
+    1     | 5.73194731
+    2     | 4.92706871
+    3     | 4.01176675
+    4     | 3.32631038
+    5     | 2.78111724
+    6     | 1.92718965
+    7     | 1.71882470
+    8     | 1.36888238
+    9     | 0.76762262
 
+
+## Loss functions in ML
+
+Tracking the change in the loss function per epoch is a common task in machine learning and the `FancyChangeTracker` provides an extremely simple way to output nicely formatted outputs.
 
 
 ```python
@@ -181,8 +155,3 @@ for epoch in epochs:
       8 | 0.89 | 0.858771 | 0.489195502
       9 | 0.30 | 0.594793 | 0.663309048
 
-
-
-```python
-
-```
