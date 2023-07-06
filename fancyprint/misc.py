@@ -26,7 +26,7 @@ class TerminalColors:
     
 class MessageFilter(set):
     
-    def __setitem__(self, index, value):
+    def __setitem__(self, index: int, value: MessageType):
         if isinstance(value, MessageType):
             super().__setitem__(index, value)
         else:

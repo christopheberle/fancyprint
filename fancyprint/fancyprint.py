@@ -1,10 +1,11 @@
 import sys
 from contextlib import redirect_stdout
 from .misc import Symbols, MessageType, TerminalColors, MessageFilter
+from typing import Optional
 
 class FancyPrintContext:
     
-    def __init__(self, message: str = None, msgtype: MessageType = None):
+    def __init__(self, message: Optional[str] = None, msgtype: Optional[MessageType] = None) -> None:
         self.msgtype = msgtype
         self.open = False
         if msgtype is not None:
@@ -16,7 +17,7 @@ class FancyPrintContext:
     def __exit__(self, exc_type, exc_value, traceback):
         self.end_chunk()
             
-    def new_chunk(self, message: str, msgtype: MessageType,):
+    def new_chunk(self, message: str, msgtype: MessageType) -> None:
         if msgtype in MESSAGE_FILTER:
             return 
         if self.open and not settings["autoclose_chunks"]:
@@ -29,14 +30,14 @@ class FancyPrintContext:
         _fprint(f"{header} {message}", msgtype)
         self.open = True
         
-    def end_chunk(self):
+    def end_chunk(self) -> None:
         if self.open:
             print(colorize(Symbols.MULTI_LINE_CHUNK_END, msgtype_to_terminal_color[self.msgtype]))
             print('\n')
         self.msgtype = None
         self.open = False
         
-    def print(self, message: str, msgtype : MessageType = None):
+    def print(self, message: str, msgtype : Optional[MessageType] = None) -> None:
         if not self.open:
             if msgtype is None:
                 raise Exception("No chunk found to attach message to. Please specify a message type")
@@ -51,7 +52,7 @@ class FancyPrintContext:
         header = f"{header_symb} {header_text}"
         _fprint(f"{header} {message}", msgtype or self.msgtype)
         
-    def print_single(self, message: str, msgtype: MessageType):
+    def print_single(self, message: str, msgtype: MessageType) -> None:
         if self.open and settings["autoclose_chunks"]:
             self.end_chunk()
         elif self.open and not settings["autoclose_chunks"]:
@@ -83,7 +84,7 @@ def fancyfy(fn):
             fn(*args, **kwargs)
     return wrapper
 
-def _fprint(message : str, message_type : MessageType = None):
+def _fprint(message : str, message_type : Optional[MessageType] = None):
     if message_type in MESSAGE_FILTER:
         return
     print(message, flush=settings["autoflush"])
@@ -108,7 +109,12 @@ def debug(message : str):
 def warning(message : str):
     GLOBAL_CONTEXT.print_single(message, MessageType.WARNING)
     
-def print_enum(dictionary : dict, message_type: MessageType = None, message="", max_key_len = None, max_val_len = None, keep_open=False):
+def print_enum(dictionary : dict, 
+               message_type: Optional[MessageType] = None, 
+               message: Optional[str] = "", 
+               max_key_len: Optional[int] = None, 
+               max_val_len: Optional[int] = None, 
+               keep_open: Optional[bool]=False):
     if not GLOBAL_CONTEXT.open:
         if message_type is None:
             raise Exception("No chunk found to attach enumeration to. Please specify a message type")

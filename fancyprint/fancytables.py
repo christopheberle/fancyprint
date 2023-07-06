@@ -1,4 +1,4 @@
-from typing import List, Optional, Iterable
+from typing import List, Optional, Iterable, Any
 from .fancyprint import FancyPrintContext
 from .utils import stralign, TrackerFunctions
 from collections import deque
@@ -78,7 +78,7 @@ class FancyChangeTracker:
     
     AVAIL_QUANTITIES = [fn_name for fn_name in dir(TrackerFunctions) if not fn_name.startswith("__")]
     
-    def __init__(self, var_name, quantities: Optional[str | List[str]] = "delta", max_history: Optional[int] = None, **formatting_kwargs):
+    def __init__(self, var_name: str, quantities: Optional[str | List[str]] = "delta", max_history: Optional[int] = None, **formatting_kwargs):
         if isinstance(quantities, str):
             quantities = [quantities]
         assert all([q in self.AVAIL_QUANTITIES for q in quantities])
@@ -88,7 +88,7 @@ class FancyChangeTracker:
         self.fn_dir = {fn_name: getattr(TrackerFunctions, fn_name) for fn_name in quantities}
         self.table = FancyTable([var_name] + quantities, **formatting_kwargs)
         
-    def update(self, var):
+    def update(self, var: Any):
         self.var_hist.append(var)
         fn_vals = [fn(self.var_hist) for fn in self.fn_dir.values()]
         self.table.print_row(var, *fn_vals)
