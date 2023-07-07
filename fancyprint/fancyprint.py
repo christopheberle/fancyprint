@@ -21,7 +21,7 @@ class FancyPrintContext:
         if msgtype in MESSAGE_FILTER:
             return 
         if self.open and not settings["autoclose_chunks"]:
-            raise Exception("Chunk already open")
+            raise RuntimeError("Chunk already open")
         elif self.open and settings["autoclose_chunks"]:
             self.end_chunk()
         
@@ -40,7 +40,7 @@ class FancyPrintContext:
     def print(self, message: str, msgtype : Optional[MessageType] = None) -> None:
         if not self.open:
             if msgtype is None:
-                raise Exception("No chunk found to attach message to. Please specify a message type")
+                raise RuntimeError("No chunk found to attach message to. Please specify a message type")
             else:
                 self.print_single(message, MessageType)
                 return
@@ -56,7 +56,7 @@ class FancyPrintContext:
         if self.open and settings["autoclose_chunks"]:
             self.end_chunk()
         elif self.open and not settings["autoclose_chunks"]:
-            raise Exception("Chunk already open")
+            raise RuntimeError("Chunk already open")
         header = colorize(f"{Symbols.SINGLE_LINE_CHUNK} {msgtype.ljust(5)}", msgtype_to_terminal_color[msgtype])
         _fprint(f"{header} {message}", msgtype)
         
@@ -117,7 +117,7 @@ def print_enum(dictionary : dict,
                keep_open: Optional[bool]=False):
     if not GLOBAL_CONTEXT.open:
         if message_type is None:
-            raise Exception("No chunk found to attach enumeration to. Please specify a message type")
+            raise RuntimeError("No chunk found to attach enumeration to. Please specify a message type")
         else:
             GLOBAL_CONTEXT.new_chunk(message, message_type)
     keys = dictionary.keys()
